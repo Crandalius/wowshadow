@@ -108,7 +108,6 @@ public:
         return count;
     }
 
-<<<<<<< HEAD
     // Missions
     void AddMission(uint32 garrMissionId);
     Mission* GetMission(uint64 dbId);
@@ -140,12 +139,6 @@ public:
 
 protected:
     GarrisonType _garrisonType;
-=======
-    void SendInfo();
-    void SendRemoteInfo() const;
-    void SendBlueprintAndSpecializationData();
-    void SendMapData(Player* receiver) const;
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
     Map* FindMap() const;
 

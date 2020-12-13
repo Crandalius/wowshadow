@@ -51,16 +51,9 @@ struct EquipmentSetInfo
         int32 AssignedSpecIndex = -1;                           ///< Index of character specialization that this set is automatically equipped for
         std::string SetName;
         std::string SetIcon;
-<<<<<<< HEAD:src/server/game/Entities/Player/EquipementSet.h
         std::array<ObjectGuid, EQUIPEMENT_SET_SLOTS> Pieces;
         std::array<int32, EQUIPEMENT_SET_SLOTS> Appearances;    ///< ItemModifiedAppearanceID
-=======
-        std::array<ObjectGuid, EQUIPMENT_SET_SLOTS> Pieces;
-        std::array<int32, EQUIPMENT_SET_SLOTS> Appearances;     ///< ItemModifiedAppearanceID
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1:src/server/game/Entities/Player/EquipmentSet.h
         std::array<int32, 2> Enchants;                          ///< SpellItemEnchantmentID
-        int32 Unknown901_1 = 0;
-        int32 Unknown901_2 = 0;
     } Data;
 
     /// Server-side data

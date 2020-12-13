@@ -486,12 +486,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, CreateObjectBits flags) const
         bool hasAreaTriggerPolygon  = areaTriggerTemplate->IsPolygon();
         bool hasAreaTriggerCylinder = areaTriggerTemplate->IsCylinder();
         bool hasAreaTriggerSpline   = areaTrigger->HasSplines();
-<<<<<<< HEAD
         bool hasCircularMovement    = areaTrigger->HasCircularMovement();
-=======
-        bool hasOrbit               = areaTrigger->HasOrbit();
-        bool hasMovementScript      = false;
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
         data->WriteBit(hasAbsoluteOrientation);
         data->WriteBit(hasDynamicShape);
@@ -513,12 +508,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, CreateObjectBits flags) const
         data->WriteBit(hasAreaTriggerPolygon);
         data->WriteBit(hasAreaTriggerCylinder);
         data->WriteBit(hasAreaTriggerSpline);
-<<<<<<< HEAD
         data->WriteBit(hasCircularMovement);
-=======
-        data->WriteBit(hasOrbit);
-        data->WriteBit(hasMovementScript);
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
         if (hasUnk3)
             data->WriteBit(0);
@@ -597,14 +587,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, CreateObjectBits flags) const
             *data << float(areaTriggerTemplate->CylinderDatas.LocationZOffsetTarget);
         }
 
-<<<<<<< HEAD
         if (hasCircularMovement)
-=======
-        //if (hasMovementScript)
-        //    *data << *areaTrigger->GetMovementScript(); // AreaTriggerMovementScriptInfo
-
-        if (hasOrbit)
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
             *data << *areaTrigger->GetCircularMovementInfo();
     }
 

@@ -27,7 +27,6 @@
 #include "GossipDef.h"
 #include "Group.h"
 #include "Log.h"
-#include "LootMgr.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Player.h"
@@ -260,31 +259,26 @@ void WorldSession::HandleQuestQueryOpcode(WorldPackets::Quest::QueryQuestInfo& p
 
 void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::QuestGiverChooseReward& packet)
 {
-    TC_LOG_DEBUG("network", "WORLD: Received CMSG_QUESTGIVER_CHOOSE_REWARD npc = %s, quest = %u, reward = %u",
-        packet.QuestGiverGUID.ToString().c_str(), packet.QuestID, packet.Choice.Item.ItemID);
+    TC_LOG_DEBUG("network", "WORLD: Received CMSG_QUESTGIVER_CHOOSE_REWARD npc = %s, quest = %u, reward = %u", packet.QuestGiverGUID.ToString().c_str(), packet.QuestID, packet.ItemChoiceID);
 
     Quest const* quest = sObjectMgr->GetQuestTemplate(packet.QuestID);
     if (!quest)
         return;
 
-    // TODO: currency choice items
-    if (packet.Choice.LootItemType != LootItemType::Item)
-        return;
-
-    if (packet.Choice.Item.ItemID)
+    // This is Real Item Entry, not slot id as pre 5.x
+    if (packet.ItemChoiceID)
     {
-        ItemTemplate const* rewardProto = sObjectMgr->GetItemTemplate(packet.Choice.Item.ItemID);
+        ItemTemplate const* rewardProto = sObjectMgr->GetItemTemplate(packet.ItemChoiceID);
         if (!rewardProto)
         {
-            TC_LOG_ERROR("entities.player.cheat", "Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (%s) tried to get invalid reward item (Item Entry: %u) for quest %u (possible packet-hacking detected)",
-                _player->GetName().c_str(), _player->GetGUID().ToString().c_str(), packet.Choice.Item.ItemID, packet.QuestID);
+            TC_LOG_ERROR("entities.player.cheat", "Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (%s) tried to get invalid reward item (Item Entry: %u) for quest %u (possible packet-hacking detected)", _player->GetName().c_str(), _player->GetGUID().ToString().c_str(), packet.ItemChoiceID, packet.QuestID);
             return;
         }
 
         bool itemValid = false;
         for (uint32 i = 0; i < quest->GetRewChoiceItemsCount(); ++i)
         {
-            if (quest->RewardChoiceItemId[i] && quest->RewardChoiceItemId[i] == packet.Choice.Item.ItemID)
+            if (quest->RewardChoiceItemId[i] && quest->RewardChoiceItemId[i] == uint32(packet.ItemChoiceID))
             {
                 itemValid = true;
                 break;
@@ -297,7 +291,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
             {
                 for (QuestPackageItemEntry const* questPackageItem : *questPackageItems)
                 {
-                    if (questPackageItem->ItemID != packet.Choice.Item.ItemID)
+                    if (questPackageItem->ItemID != packet.ItemChoiceID)
                         continue;
 
                     if (_player->CanSelectQuestPackageItem(questPackageItem))
@@ -314,7 +308,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
                 {
                     for (QuestPackageItemEntry const* questPackageItem : *questPackageItems)
                     {
-                        if (questPackageItem->ItemID != packet.Choice.Item.ItemID)
+                        if (questPackageItem->ItemID != packet.ItemChoiceID)
                             continue;
 
                         itemValid = true;
@@ -326,8 +320,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
 
         if (!itemValid)
         {
-            TC_LOG_ERROR("entities.player.cheat", "Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (%s) tried to get reward item (Item Entry: %u) wich is not a reward for quest %u (possible packet-hacking detected)",
-                _player->GetName().c_str(), _player->GetGUID().ToString().c_str(), packet.Choice.Item.ItemID, packet.QuestID);
+            TC_LOG_ERROR("entities.player.cheat", "Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (%s) tried to get reward item (Item Entry: %u) wich is not a reward for quest %u (possible packet-hacking detected)", _player->GetName().c_str(), _player->GetGUID().ToString().c_str(), packet.ItemChoiceID, packet.QuestID);
             return;
         }
     }
@@ -353,9 +346,9 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
         return;
     }
 
-    if (_player->CanRewardQuest(quest, packet.Choice.Item.ItemID, true))
+    if (_player->CanRewardQuest(quest, packet.ItemChoiceID, true))
     {
-        _player->RewardQuest(quest, packet.Choice.Item.ItemID, object);
+        _player->RewardQuest(quest, packet.ItemChoiceID, object);
 
         switch (object->GetTypeId())
         {
@@ -379,14 +372,9 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
                         }
                     }
 
-<<<<<<< HEAD
                     if (creatureQGiver)
                         creatureQGiver->GetAI()->sQuestReward(_player, quest, packet.ItemChoiceID);
                 }
-=======
-                _player->PlayerTalkClass->ClearMenus();
-                creatureQGiver->GetAI()->QuestReward(_player, quest, packet.Choice.LootItemType, packet.Choice.Item.ItemID);
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
                 break;
             }
             case TYPEID_GAMEOBJECT:
@@ -407,13 +395,8 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPackets::Quest::Quest
                         }
                     }
 
-<<<<<<< HEAD
                     questGiver->AI()->QuestReward(_player, quest, packet.ItemChoiceID);
                 }
-=======
-                _player->PlayerTalkClass->ClearMenus();
-                questGiver->AI()->QuestReward(_player, quest, packet.Choice.LootItemType, packet.Choice.Item.ItemID);
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
                 break;
             }
             default:

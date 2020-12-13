@@ -525,7 +525,6 @@ Garrison::Mission* Garrison::GetMissionByID(uint32 ID)
     return nullptr;
 }
 
-<<<<<<< HEAD
 void Garrison::DeleteMission(uint64 dbId)
 {
     _missions.erase(dbId);
@@ -539,22 +538,6 @@ std::vector<Garrison::Follower*> Garrison::GetMissionFollowers(uint32 garrMissio
             missionFollowers.push_back(&followerItr.second);
 
     return missionFollowers;
-=======
-void Garrison::SendMapData(Player* receiver) const
-{
-    WorldPackets::Garrison::GarrisonMapDataResponse mapData;
-    mapData.Buildings.reserve(_plots.size());
-
-    for (auto const& p : _plots)
-    {
-        Plot const& plot = p.second;
-        if (plot.BuildingInfo.PacketInfo)
-            if (uint32 garrBuildingPlotInstId = sGarrisonMgr.GetGarrBuildingPlotInst(plot.BuildingInfo.PacketInfo->GarrBuildingID, plot.GarrSiteLevelPlotInstId))
-                mapData.Buildings.emplace_back(garrBuildingPlotInstId, plot.PacketInfo.PlotPos.Pos);
-    }
-
-    receiver->SendDirectMessage(mapData.Write());
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 }
 
 bool Garrison::HasMission(uint32 garrMissionId) const

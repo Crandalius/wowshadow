@@ -22,32 +22,12 @@
 #include "Player.h"
 #include "World.h"
 
-namespace WorldPackets
-{
-namespace Character
-{
-ByteBuffer& operator<<(ByteBuffer& data, ChrCustomizationChoice const& customizationChoice)
-{
-    data << uint32(customizationChoice.ChrCustomizationOptionID);
-    data << uint32(customizationChoice.ChrCustomizationChoiceID);
-
-    return data;
-}
-
-ByteBuffer& operator>>(ByteBuffer& data, ChrCustomizationChoice& customizationChoice)
-{
-    data >> customizationChoice.ChrCustomizationOptionID;
-    data >> customizationChoice.ChrCustomizationChoiceID;
-
-    return data;
-}
-
-EnumCharacters::EnumCharacters(WorldPacket&& packet) : ClientPacket(std::move(packet))
+WorldPackets::Character::EnumCharacters::EnumCharacters(WorldPacket&& packet) : ClientPacket(std::move(packet))
 {
     ASSERT(GetOpcode() == CMSG_ENUM_CHARACTERS || GetOpcode() == CMSG_ENUM_CHARACTERS_DELETED_BY_CLIENT);
 }
 
-EnumCharactersResult::CharacterInfo::CharacterInfo(Field* fields)
+WorldPackets::Character::EnumCharactersResult::CharacterInfo::CharacterInfo(Field* fields)
 {
     //         0                1                2                3                 4                  5                6                7
     // "SELECT characters.guid, characters.name, characters.race, characters.class, characters.gender, characters.skin, characters.face, characters.hairStyle, "
@@ -143,18 +123,17 @@ EnumCharactersResult::CharacterInfo::CharacterInfo(Field* fields)
     }
 }
 
-ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo::VisualItemInfo const& visualItem)
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Character::EnumCharactersResult::CharacterInfo::VisualItemInfo const& visualItem)
 {
     data << uint32(visualItem.DisplayID);
     data << uint32(visualItem.DisplayEnchantID);
-    data << int32(visualItem.ItemModifiedAppearanceID);
     data << uint8(visualItem.InvType);
     data << uint8(visualItem.Subclass);
 
     return data;
 }
 
-ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo const& charInfo)
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Character::EnumCharactersResult::CharacterInfo const& charInfo)
 {
     data << charInfo.Guid;
     data << uint64(charInfo.GuildClubMemberID);
@@ -162,7 +141,12 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo con
     data << uint8(charInfo.RaceID);
     data << uint8(charInfo.ClassID);
     data << uint8(charInfo.SexID);
-    data << uint32(charInfo.Customizations.size());
+    data << uint8(charInfo.SkinID);
+    data << uint8(charInfo.FaceID);
+    data << uint8(charInfo.HairStyle);
+    data << uint8(charInfo.HairColor);
+    data << uint8(charInfo.FacialHair);
+    data.append(charInfo.CustomDisplay.data(), charInfo.CustomDisplay.size());
     data << uint8(charInfo.ExperienceLevel);
     data << int32(charInfo.ZoneID);
     data << int32(charInfo.MapID);
@@ -178,7 +162,7 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo con
     data << uint32(charInfo.ProfessionIds[0]);
     data << uint32(charInfo.ProfessionIds[1]);
 
-    for (EnumCharactersResult::CharacterInfo::VisualItemInfo const& visualItem : charInfo.VisualItems)
+    for (WorldPackets::Character::EnumCharactersResult::CharacterInfo::VisualItemInfo const& visualItem : charInfo.VisualItems)
         data << visualItem;
 
     data << uint32(charInfo.LastPlayedTime);
@@ -186,23 +170,18 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo con
     data << uint32(charInfo.Unknown703);
     data << uint32(charInfo.LastLoginVersion);
     data << uint32(charInfo.Flags4);
-    data << uint32(charInfo.MailSenders.size());
-    data << uint32(charInfo.OverrideSelectScreenFileDataID);
-
-    for (ChrCustomizationChoice customization : charInfo.Customizations)
-        data << customization;
-
+    data << uint32(charInfo.Unknown830.size());
     data.WriteBits(charInfo.Name.length(), 6);
     data.WriteBit(charInfo.FirstLogin);
     data.WriteBit(charInfo.BoostInProgress);
     data.WriteBits(charInfo.unkWod61x, 5);
 
-    for (std::string const& str : charInfo.MailSenders)
+    for (std::string const& str : charInfo.Unknown830)
         data.WriteBits(str.length() + 1, 6);
 
     data.FlushBits();
 
-    for (std::string const& str : charInfo.MailSenders)
+    for (std::string const& str : charInfo.Unknown830)
         if (!str.empty())
             data << str;
 
@@ -211,7 +190,7 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::CharacterInfo con
     return data;
 }
 
-ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::RaceUnlock const& raceUnlock)
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Character::EnumCharactersResult::RaceUnlock const& raceUnlock)
 {
     data << int32(raceUnlock.RaceID);
     data.WriteBit(raceUnlock.HasExpansion);
@@ -222,7 +201,7 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::RaceUnlock const&
     return data;
 }
 
-ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::UnlockedConditionalAppearance const& unlockedConditionalAppearance)
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Character::EnumCharactersResult::UnlockedConditionalAppearance const& unlockedConditionalAppearance)
 {
     data << int32(unlockedConditionalAppearance.AchievementID);
     data << int32(unlockedConditionalAppearance.Unused);
@@ -230,14 +209,15 @@ ByteBuffer& operator<<(ByteBuffer& data, EnumCharactersResult::UnlockedCondition
     return data;
 }
 
-WorldPacket const* EnumCharactersResult::Write()
+WorldPacket const* WorldPackets::Character::EnumCharactersResult::Write()
 {
     _worldPacket.reserve(9 + Characters.size() * sizeof(CharacterInfo) + RaceUnlockData.size() * sizeof(RaceUnlock));
 
     _worldPacket.WriteBit(Success);
     _worldPacket.WriteBit(IsDeletedCharacters);
-    _worldPacket.WriteBit(IsNewPlayerRestrictionSkipped);
-    _worldPacket.WriteBit(IsNewPlayer);
+    _worldPacket.WriteBit(IsTestDemonHunterCreationAllowed);
+    _worldPacket.WriteBit(HasDemonHunterOnRealm);
+    _worldPacket.WriteBit(IsDemonHunterCreationAllowed);
     _worldPacket.WriteBit(DisabledClassesMask.is_initialized());
     _worldPacket.WriteBit(IsAlliedRacesCreationAllowed);
     _worldPacket << uint32(Characters.size());
@@ -260,66 +240,54 @@ WorldPacket const* EnumCharactersResult::Write()
     return &_worldPacket;
 }
 
-void CheckCharacterNameAvailability::Read()
+void WorldPackets::Character::CreateCharacter::Read()
 {
-    _worldPacket >> SequenceIndex;
-    Name = _worldPacket.ReadString(_worldPacket.ReadBits(6));
-}
-
-WorldPacket const* CheckCharacterNameAvailabilityResult::Write()
-{
-    _worldPacket << uint32(SequenceIndex);
-    _worldPacket << uint32(Result);
-
-    return &_worldPacket;
-}
-
-void CreateCharacter::Read()
-{
-    CreateInfo = std::make_shared<CharacterCreateInfo>();
+    CreateInfo.reset(new CharacterCreateInfo());
     uint32 nameLength = _worldPacket.ReadBits(6);
     bool const hasTemplateSet = _worldPacket.ReadBit();
     CreateInfo->IsTrialBoost = _worldPacket.ReadBit();
-    CreateInfo->UseNPE = _worldPacket.ReadBit();
 
     _worldPacket >> CreateInfo->Race;
     _worldPacket >> CreateInfo->Class;
     _worldPacket >> CreateInfo->Sex;
-    CreateInfo->Customizations.resize(_worldPacket.read<uint32>());
+    _worldPacket >> CreateInfo->Skin;
+    _worldPacket >> CreateInfo->Face;
+    _worldPacket >> CreateInfo->HairStyle;
+    _worldPacket >> CreateInfo->HairColor;
+    _worldPacket >> CreateInfo->FacialHairStyle;
+    _worldPacket >> CreateInfo->OutfitId;
+    _worldPacket.read(CreateInfo->CustomDisplay.data(), CreateInfo->CustomDisplay.size());
     CreateInfo->Name = _worldPacket.ReadString(nameLength);
     if (hasTemplateSet)
         CreateInfo->TemplateSet = _worldPacket.read<int32>();
-
-    for (ChrCustomizationChoice& customization : CreateInfo->Customizations)
-        _worldPacket >> customization;
 }
 
-WorldPacket const* CreateChar::Write()
+WorldPacket const* WorldPackets::Character::CreateChar::Write()
 {
     _worldPacket << uint8(Code);
     _worldPacket << Guid;
     return &_worldPacket;
 }
 
-void CharDelete::Read()
+void WorldPackets::Character::CharDelete::Read()
 {
     _worldPacket >> Guid;
 }
 
-WorldPacket const* DeleteChar::Write()
+WorldPacket const* WorldPackets::Character::DeleteChar::Write()
 {
     _worldPacket << uint8(Code);
     return &_worldPacket;
 }
 
-void CharacterRenameRequest::Read()
+void WorldPackets::Character::CharacterRenameRequest::Read()
 {
-    RenameInfo = std::make_shared<CharacterRenameInfo>();
+    RenameInfo.reset(new CharacterRenameInfo());
     _worldPacket >> RenameInfo->Guid;
     RenameInfo->NewName = _worldPacket.ReadString(_worldPacket.ReadBits(6));
 }
 
-WorldPacket const* CharacterRenameResult::Write()
+WorldPacket const* WorldPackets::Character::CharacterRenameResult::Write()
 {
     _worldPacket << uint8(Result);
     _worldPacket.WriteBit(Guid.is_initialized());
@@ -334,21 +302,23 @@ WorldPacket const* CharacterRenameResult::Write()
     return &_worldPacket;
 }
 
-void CharCustomize::Read()
+void WorldPackets::Character::CharCustomize::Read()
 {
-    CustomizeInfo = std::make_shared<CharCustomizeInfo>();
+    CustomizeInfo.reset(new CharCustomizeInfo());
     _worldPacket >> CustomizeInfo->CharGUID;
     _worldPacket >> CustomizeInfo->SexID;
-    CustomizeInfo->Customizations.resize(_worldPacket.read<uint32>());
-    for (ChrCustomizationChoice& customization : CustomizeInfo->Customizations)
-        _worldPacket >> customization;
-
+    _worldPacket >> CustomizeInfo->SkinID;
+    _worldPacket >> CustomizeInfo->HairColorID;
+    _worldPacket >> CustomizeInfo->HairStyleID;
+    _worldPacket >> CustomizeInfo->FacialHairStyleID;
+    _worldPacket >> CustomizeInfo->FaceID;
+    _worldPacket.read(CustomizeInfo->CustomDisplay.data(), CustomizeInfo->CustomDisplay.size());
     CustomizeInfo->CharName = _worldPacket.ReadString(_worldPacket.ReadBits(6));
 }
 
-void CharRaceOrFactionChange::Read()
+void WorldPackets::Character::CharRaceOrFactionChange::Read()
 {
-    RaceOrFactionChangeInfo = std::make_shared<CharRaceOrFactionChangeInfo>();
+    RaceOrFactionChangeInfo.reset(new CharRaceOrFactionChangeInfo());
 
     RaceOrFactionChangeInfo->FactionChange = _worldPacket.ReadBit();
 
@@ -357,13 +327,16 @@ void CharRaceOrFactionChange::Read()
     _worldPacket >> RaceOrFactionChangeInfo->Guid;
     _worldPacket >> RaceOrFactionChangeInfo->SexID;
     _worldPacket >> RaceOrFactionChangeInfo->RaceID;
-    RaceOrFactionChangeInfo->Customizations.resize(_worldPacket.read<uint32>());
+    _worldPacket >> RaceOrFactionChangeInfo->SkinID;
+    _worldPacket >> RaceOrFactionChangeInfo->HairColorID;
+    _worldPacket >> RaceOrFactionChangeInfo->HairStyleID;
+    _worldPacket >> RaceOrFactionChangeInfo->FacialHairStyleID;
+    _worldPacket >> RaceOrFactionChangeInfo->FaceID;
+    _worldPacket.read(RaceOrFactionChangeInfo->CustomDisplay.data(), RaceOrFactionChangeInfo->CustomDisplay.size());
     RaceOrFactionChangeInfo->Name = _worldPacket.ReadString(nameLength);
-    for (ChrCustomizationChoice& customization : RaceOrFactionChangeInfo->Customizations)
-        _worldPacket >> customization;
 }
 
-WorldPacket const* CharFactionChangeResult::Write()
+WorldPacket const* WorldPackets::Character::CharFactionChangeResult::Write()
 {
     _worldPacket << uint8(Result);
     _worldPacket << Guid;
@@ -374,22 +347,26 @@ WorldPacket const* CharFactionChangeResult::Write()
     {
         _worldPacket.WriteBits(Display->Name.length(), 6);
         _worldPacket << uint8(Display->SexID);
+        _worldPacket << uint8(Display->SkinID);
+        _worldPacket << uint8(Display->HairColorID);
+        _worldPacket << uint8(Display->HairStyleID);
+        _worldPacket << uint8(Display->FacialHairStyleID);
+        _worldPacket << uint8(Display->FaceID);
         _worldPacket << uint8(Display->RaceID);
+        _worldPacket.append(Display->CustomDisplay.data(), Display->CustomDisplay.size());
         _worldPacket.WriteString(Display->Name);
-        for (ChrCustomizationChoice customization : *Display->Customizations)
-            _worldPacket << customization;
     }
 
     return &_worldPacket;
 }
 
-void GenerateRandomCharacterName::Read()
+void WorldPackets::Character::GenerateRandomCharacterName::Read()
 {
     _worldPacket >> Race;
     _worldPacket >> Sex;
 }
 
-WorldPacket const* GenerateRandomCharacterNameResult::Write()
+WorldPacket const* WorldPackets::Character::GenerateRandomCharacterNameResult::Write()
 {
     _worldPacket.WriteBit(Success);
     _worldPacket.WriteBits(Name.length(), 6);
@@ -400,11 +377,11 @@ WorldPacket const* GenerateRandomCharacterNameResult::Write()
     return &_worldPacket;
 }
 
-ReorderCharacters::ReorderCharacters(WorldPacket&& packet) : ClientPacket(CMSG_REORDER_CHARACTERS, std::move(packet))
+WorldPackets::Character::ReorderCharacters::ReorderCharacters(WorldPacket&& packet) : ClientPacket(CMSG_REORDER_CHARACTERS, std::move(packet))
 {
 }
 
-void ReorderCharacters::Read()
+void WorldPackets::Character::ReorderCharacters::Read()
 {
     Entries.resize(_worldPacket.ReadBits(9));
     for (ReorderInfo& reorderInfo : Entries)
@@ -414,14 +391,14 @@ void ReorderCharacters::Read()
     }
 }
 
-void UndeleteCharacter::Read()
+void WorldPackets::Character::UndeleteCharacter::Read()
 {
-    UndeleteInfo = std::make_shared<CharacterUndeleteInfo>();
+    UndeleteInfo.reset(new CharacterUndeleteInfo());
     _worldPacket >> UndeleteInfo->ClientToken;
     _worldPacket >> UndeleteInfo->CharacterGuid;
 }
 
-WorldPacket const* UndeleteCharacterResponse::Write()
+WorldPacket const* WorldPackets::Character::UndeleteCharacterResponse::Write()
 {
     ASSERT(UndeleteInfo);
     _worldPacket << int32(UndeleteInfo->ClientToken);
@@ -430,7 +407,7 @@ WorldPacket const* UndeleteCharacterResponse::Write()
     return &_worldPacket;
 }
 
-WorldPacket const* UndeleteCooldownStatusResponse::Write()
+WorldPacket const* WorldPackets::Character::UndeleteCooldownStatusResponse::Write()
 {
     _worldPacket.WriteBit(OnCooldown);
     _worldPacket << uint32(MaxCooldown);
@@ -438,13 +415,13 @@ WorldPacket const* UndeleteCooldownStatusResponse::Write()
     return &_worldPacket;
 }
 
-void PlayerLogin::Read()
+void WorldPackets::Character::PlayerLogin::Read()
 {
     _worldPacket >> Guid;
     _worldPacket >> FarClip;
 }
 
-WorldPacket const* LoginVerifyWorld::Write()
+WorldPacket const* WorldPackets::Character::LoginVerifyWorld::Write()
 {
     _worldPacket << int32(MapID);
     _worldPacket << Pos;
@@ -452,18 +429,18 @@ WorldPacket const* LoginVerifyWorld::Write()
     return &_worldPacket;
 }
 
-WorldPacket const* CharacterLoginFailed::Write()
+WorldPacket const* WorldPackets::Character::CharacterLoginFailed::Write()
 {
     _worldPacket << uint8(Code);
     return &_worldPacket;
 }
 
-void LogoutRequest::Read()
+void WorldPackets::Character::LogoutRequest::Read()
 {
     IdleLogout = _worldPacket.ReadBit();
 }
 
-WorldPacket const* LogoutResponse::Write()
+WorldPacket const* WorldPackets::Character::LogoutResponse::Write()
 {
     _worldPacket << int32(LogoutResult);
     _worldPacket.WriteBit(Instant);
@@ -471,13 +448,13 @@ WorldPacket const* LogoutResponse::Write()
     return &_worldPacket;
 }
 
-void LoadingScreenNotify::Read()
+void WorldPackets::Character::LoadingScreenNotify::Read()
 {
     _worldPacket >> MapID;
     Showing = _worldPacket.ReadBit();
 }
 
-WorldPacket const* InitialSetup::Write()
+WorldPacket const* WorldPackets::Character::InitialSetup::Write()
 {
     _worldPacket << uint8(ServerExpansionLevel);
     _worldPacket << uint8(ServerExpansionTier);
@@ -485,17 +462,17 @@ WorldPacket const* InitialSetup::Write()
     return &_worldPacket;
 }
 
-void SetActionBarToggles::Read()
+void WorldPackets::Character::SetActionBarToggles::Read()
 {
     _worldPacket >> Mask;
 }
 
-void RequestPlayedTime::Read()
+void WorldPackets::Character::RequestPlayedTime::Read()
 {
     TriggerScriptEvent = _worldPacket.ReadBit();
 }
 
-WorldPacket const* PlayedTime::Write()
+WorldPacket const* WorldPackets::Character::PlayedTime::Write()
 {
     _worldPacket << int32(TotalTime);
     _worldPacket << int32(LevelTime);
@@ -505,26 +482,29 @@ WorldPacket const* PlayedTime::Write()
     return &_worldPacket;
 }
 
-void SetTitle::Read()
+void WorldPackets::Character::SetTitle::Read()
 {
     _worldPacket >> TitleID;
 }
 
-void AlterApperance::Read()
+void WorldPackets::Character::AlterApperance::Read()
 {
-    Customizations.resize(_worldPacket.read<uint32>());
-    _worldPacket >> NewSex;
-    for (ChrCustomizationChoice& customization : Customizations)
-        _worldPacket >> customization;
+    _worldPacket >> NewHairStyle;
+    _worldPacket >> NewHairColor;
+    _worldPacket >> NewFacialHair;
+    _worldPacket >> NewSkinColor;
+    _worldPacket >> NewFace;
+    for (std::size_t i = 0; i < NewCustomDisplay.size(); ++i)
+        _worldPacket >> NewCustomDisplay[i];
 }
 
-WorldPacket const* BarberShopResult::Write()
+WorldPacket const* WorldPackets::Character::BarberShopResult::Write()
 {
     _worldPacket << int32(Result);
     return &_worldPacket;
 }
 
-WorldPacket const* LogXPGain::Write()
+WorldPacket const* WorldPackets::Character::LogXPGain::Write()
 {
     _worldPacket << Victim;
     _worldPacket << int32(Original);
@@ -536,65 +516,64 @@ WorldPacket const* LogXPGain::Write()
     return &_worldPacket;
 }
 
-WorldPacket const* TitleEarned::Write()
+WorldPacket const* WorldPackets::Character::TitleEarned::Write()
 {
     _worldPacket << uint32(Index);
 
     return &_worldPacket;
 }
 
-void SetFactionAtWar::Read()
+void WorldPackets::Character::SetFactionAtWar::Read()
 {
     _worldPacket >> FactionIndex;
 }
 
-void SetFactionNotAtWar::Read()
+void WorldPackets::Character::SetFactionNotAtWar::Read()
 {
     _worldPacket >> FactionIndex;
 }
 
-void SetFactionInactive::Read()
+void WorldPackets::Character::SetFactionInactive::Read()
 {
     _worldPacket >> Index;
     State = _worldPacket.ReadBit();
 }
 
-void SetWatchedFaction::Read()
+void WorldPackets::Character::SetWatchedFaction::Read()
 {
     _worldPacket >> FactionIndex;
 }
 
-WorldPacket const* SetFactionVisible::Write()
+WorldPacket const* WorldPackets::Character::SetFactionVisible::Write()
 {
     _worldPacket << FactionIndex;
     return &_worldPacket;
 }
 
-<<<<<<< HEAD
 WorldPackets::Character::CharCustomizeResponse::CharCustomizeResponse(WorldPackets::Character::CharCustomizeInfo const* info)
     : ServerPacket(SMSG_CHAR_CUSTOMIZE, 16 + 1 + 1 + 1 + 1 + 1 + 1 + 1)
-=======
-CharCustomizeSuccess::CharCustomizeSuccess(CharCustomizeInfo const* info)
-    : ServerPacket(SMSG_CHAR_CUSTOMIZE_SUCCESS, 16 + 1 + 1 + 1 + 1 + 1 + 1 + 1), Customizations(info->Customizations)
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 {
     CharGUID = info->CharGUID;
     SexID = info->SexID;
+    SkinID = info->SkinID;
+    HairColorID = info->HairColorID;
+    HairStyleID = info->HairStyleID;
+    FacialHairStyleID = info->FacialHairStyleID;
+    FaceID = info->FaceID;
     CharName = info->CharName;
+    CustomDisplay = info->CustomDisplay;
 }
 
-<<<<<<< HEAD
 WorldPacket const* WorldPackets::Character::CharCustomizeResponse::Write()
-=======
-WorldPacket const* CharCustomizeSuccess::Write()
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 {
     _worldPacket << CharGUID;
     _worldPacket << uint8(SexID);
-    _worldPacket << uint32(Customizations.size());
-    for (ChrCustomizationChoice customization : Customizations)
-        _worldPacket << customization;
-
+    _worldPacket << uint8(SkinID);
+    _worldPacket << uint8(HairColorID);
+    _worldPacket << uint8(HairStyleID);
+    _worldPacket << uint8(FacialHairStyleID);
+    _worldPacket << uint8(FaceID);
+    _worldPacket.append(CustomDisplay.data(), CustomDisplay.size());
     _worldPacket.WriteBits(CharName.length(), 6);
     _worldPacket.FlushBits();
     _worldPacket.WriteString(CharName);
@@ -602,11 +581,7 @@ WorldPacket const* CharCustomizeSuccess::Write()
     return &_worldPacket;
 }
 
-<<<<<<< HEAD
 WorldPacket const* WorldPackets::Character::CharCustomizeFailed::Write()
-=======
-WorldPacket const* CharCustomizeFailure::Write()
->>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 {
     _worldPacket << uint8(Result);
     _worldPacket << CharGUID;
@@ -614,7 +589,7 @@ WorldPacket const* CharCustomizeFailure::Write()
     return &_worldPacket;
 }
 
-void SetPlayerDeclinedNames::Read()
+void WorldPackets::Character::SetPlayerDeclinedNames::Read()
 {
     _worldPacket >> Player;
 
@@ -627,12 +602,10 @@ void SetPlayerDeclinedNames::Read()
         DeclinedNames.name[i] = _worldPacket.ReadString(stringLengths[i]);
 }
 
-WorldPacket const * SetPlayerDeclinedNamesResult::Write()
+WorldPacket const * WorldPackets::Character::SetPlayerDeclinedNamesResult::Write()
 {
     _worldPacket << int32(ResultCode);
     _worldPacket << Player;
 
     return &_worldPacket;
-}
-}
 }
