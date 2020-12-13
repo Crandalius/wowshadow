@@ -472,20 +472,20 @@ std::unordered_set<uint32> const& WodGarrison::GetKnownBuildings() const
     return _knownBuildings;
 }
 
-void WodGarrison::SendBuildingLandmarks(Player* receiver) const
+void Garrison::SendMapData(Player* receiver) const
 {
-    WorldPackets::Garrison::GarrisonBuildingLandmarks buildingLandmarks;
-    buildingLandmarks.Landmarks.reserve(_plots.size());
+    WorldPackets::Garrison::GarrisonMapDataResponse mapData;
+    mapData.Buildings.reserve(_plots.size());
 
     for (auto const& p : _plots)
     {
         Plot const& plot = p.second;
         if (plot.BuildingInfo.PacketInfo)
             if (uint32 garrBuildingPlotInstId = sGarrisonMgr.GetGarrBuildingPlotInst(plot.BuildingInfo.PacketInfo->GarrBuildingID, plot.GarrSiteLevelPlotInstId))
-                buildingLandmarks.Landmarks.emplace_back(garrBuildingPlotInstId, plot.PacketInfo.PlotPos);
+                mapData.Buildings.emplace_back(garrBuildingPlotInstId, plot.PacketInfo.PlotPos.Pos);
     }
 
-    receiver->SendDirectMessage(buildingLandmarks.Write());
+    receiver->SendDirectMessage(mapData.Write());
 }
 
 GarrisonError WodGarrison::CheckBuildingPlacement(uint32 garrPlotInstanceId, uint32 garrBuildingId) const
