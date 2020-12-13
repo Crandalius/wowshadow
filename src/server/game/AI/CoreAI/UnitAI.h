@@ -42,6 +42,7 @@ class Unit;
 struct AISpellInfoType;
 enum DamageEffectType : uint8;
 enum SpellEffIndex : uint8;
+enum class LootItemType : uint8;
 
 //Selection method used by SelectTarget
 enum SelectAggroTarget
@@ -277,6 +278,7 @@ class TC_GAME_API UnitAI
         static AISpellInfoType* AISpellInfo;
         static void FillAISpellInfo();
 
+<<<<<<< HEAD
         virtual void sGossipHello(Player* /*player*/) { }
         virtual void sGossipSelect(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/) { }
         virtual void sGossipSelectCode(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/, char const* /*code*/) { }
@@ -294,6 +296,23 @@ class TC_GAME_API UnitAI
             m_EmptyWarned = false;
             m_TimedDelayedOperations.push_back(std::pair<uint32, std::function<void()>>(p_Timeout, p_Function));
         }
+=======
+        // Called when a player opens a gossip dialog with the creature.
+        virtual bool GossipHello(Player* /*player*/) { return false; }
+
+        // Called when a player selects a gossip item in the creature's gossip menu.
+        virtual bool GossipSelect(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/) { return false; }
+
+        // Called when a player selects a gossip with a code in the creature's gossip menu.
+        virtual bool GossipSelectCode(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/, char const* /*code*/) { return false; }
+
+        // Called when a player accepts a quest from the creature.
+        virtual void QuestAccept(Player* /*player*/, Quest const* /*quest*/) { }
+
+        // Called when a player completes a quest and is rewarded, opt is the selected item's index or 0
+        virtual void QuestReward(Player* player, Quest const* quest, uint32 opt);
+        virtual void QuestReward(Player* /*player*/, Quest const* /*quest*/, LootItemType /*type*/, uint32 /*opt*/) { }
+>>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
         /// Called after last delayed operation was deleted
         /// Do whatever you want

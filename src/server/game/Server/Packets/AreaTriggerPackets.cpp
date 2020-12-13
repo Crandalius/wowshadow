@@ -55,6 +55,14 @@ ByteBuffer& operator<<(ByteBuffer& data, AreaTriggerCircularMovementInfo const& 
     return data;
 }
 
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::AreaTrigger::AreaTriggerMovementScriptInfo const& areaTriggerMovementScript)
+{
+    data << int32(areaTriggerMovementScript.SpellScriptID);
+    data << areaTriggerMovementScript.Center;
+
+    return data;
+}
+
 void WorldPackets::AreaTrigger::AreaTrigger::Read()
 {
     _worldPacket >> AreaTriggerID;
@@ -76,14 +84,27 @@ WorldPacket const* WorldPackets::AreaTrigger::AreaTriggerRePath::Write()
     _worldPacket << TriggerGUID;
 
     _worldPacket.WriteBit(AreaTriggerSpline.is_initialized());
+<<<<<<< HEAD
     _worldPacket.WriteBit(AreaTriggerCircularMovement.is_initialized());
+=======
+    _worldPacket.WriteBit(AreaTriggerOrbit.is_initialized());
+    _worldPacket.WriteBit(AreaTriggerMovementScript.is_initialized());
+>>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
     _worldPacket.FlushBits();
 
     if (AreaTriggerSpline)
         _worldPacket << *AreaTriggerSpline;
 
+<<<<<<< HEAD
     if (AreaTriggerCircularMovement)
         _worldPacket << *AreaTriggerCircularMovement;
+=======
+    if (AreaTriggerMovementScript)
+        _worldPacket << *AreaTriggerMovementScript;
+
+    if (AreaTriggerOrbit)
+        _worldPacket << *AreaTriggerOrbit;
+>>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
     return &_worldPacket;
 }

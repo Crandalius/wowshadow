@@ -74,8 +74,9 @@ void WorldSession::HandleGarrisonRequestBlueprintAndSpecializationData(WorldPack
     _player->SendGarrisonBlueprintAndSpecializationData();
 }
 
-void WorldSession::HandleGarrisonGetBuildingLandmarks(WorldPackets::Garrison::GarrisonGetBuildingLandmarks& /*garrisonGetBuildingLandmarks*/)
+void WorldSession::HandleGarrisonGetMapData(WorldPackets::Garrison::GarrisonGetMapData& /*garrisonGetMapData*/)
 {
+<<<<<<< HEAD
     if (Garrison* garrison = _player->GetGarrison(GARRISON_TYPE_GARRISON))
         garrison->ToWodGarrison()->SendBuildingLandmarks(_player);
 }
@@ -198,4 +199,8 @@ void WorldSession::HandleGarrisonMissionBonusRoll(WorldPackets::Garrison::Garris
         return;
 
     garrison->CalculateMissonBonusRoll(missionBonusRoll.MissionID);
+=======
+    if (Garrison* garrison = _player->GetGarrison())
+        garrison->SendMapData(_player);
+>>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 }

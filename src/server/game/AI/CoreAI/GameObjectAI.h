@@ -26,6 +26,7 @@
 class GameObject;
 class SpellInfo;
 class Unit;
+enum class LootItemType : uint8;
 
 class TC_GAME_API GameObjectAI
 {
@@ -46,7 +47,34 @@ class TC_GAME_API GameObjectAI
         virtual void SetGUID(ObjectGuid /*guid*/, int32 /*id = 0 */) { }
         virtual ObjectGuid GetGUID(int32 /*id = 0 */) const { return ObjectGuid::Empty; }
 
+<<<<<<< HEAD
         static int Permissible(GameObject const* go);
+=======
+        static int32 Permissible(GameObject const* go);
+
+        // Called when a player opens a gossip dialog with the gameobject.
+        virtual bool GossipHello(Player* /*player*/) { return false; }
+
+        // Called when a player selects a gossip item in the gameobject's gossip menu.
+        virtual bool GossipSelect(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/) { return false; }
+
+        // Called when a player selects a gossip with a code in the gameobject's gossip menu.
+        virtual bool GossipSelectCode(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/, char const* /*code*/) { return false; }
+
+        // Called when a player accepts a quest from the gameobject.
+        virtual void QuestAccept(Player* /*player*/, Quest const* /*quest*/) { }
+
+        // Called when a player completes a quest and is rewarded, opt is the selected item's index or 0
+        virtual void QuestReward(Player* player, Quest const* quest, uint32 opt);
+        virtual void QuestReward(Player* /*player*/, Quest const* /*quest*/, LootItemType /*type*/, uint32 /*opt*/) { }
+
+        // Called when the dialog status between a player and the gameobject is requested.
+        virtual uint32 GetDialogStatus(Player* player);
+
+        // Called when a Player clicks a GameObject, before GossipHello
+        // prevents achievement tracking if returning true
+        virtual bool OnReportUse(Player* /*player*/) { return false; }
+>>>>>>> cab4c87d2d... Core/PacketIO: Updated most packet structures to 9.0.1
 
         virtual bool GossipHello(Player* /*player*/, bool /*reportUse*/) { return false; }
         virtual bool GossipSelect(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/) { return false; }
