@@ -36,6 +36,12 @@ namespace WorldPackets
             std::vector<TaggedPosition<Position::XYZ>> Points;
         };
 
+        struct AreaTriggerMovementScriptInfo
+        {
+            uint32 SpellScriptID = 0;
+            TaggedPosition<Position::XYZ> Center;
+        };
+
         class AreaTrigger final : public ClientPacket
         {
         public:
@@ -75,6 +81,7 @@ namespace WorldPackets
             WorldPacket const* Write() override;
 
             Optional<AreaTriggerSplineInfo> AreaTriggerSpline;
+            Optional<AreaTriggerMovementScriptInfo> AreaTriggerMovementScript;
             Optional<AreaTriggerCircularMovementInfo> AreaTriggerCircularMovement;
             ObjectGuid TriggerGUID;
         };

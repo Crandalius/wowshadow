@@ -26,6 +26,7 @@
 class GameObject;
 class SpellInfo;
 class Unit;
+enum class LootItemType : uint8;
 
 class TC_GAME_API GameObjectAI
 {
@@ -52,7 +53,8 @@ class TC_GAME_API GameObjectAI
         virtual bool GossipSelect(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/) { return false; }
         virtual bool GossipSelectCode(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/, char const* /*code*/) { return false; }
         virtual bool QuestAccept(Player* /*player*/, Quest const* /*quest*/) { return false; }
-        virtual bool QuestReward(Player* /*player*/, Quest const* /*quest*/, uint32 /*opt*/) { return false; }
+        virtual void QuestReward(Player* player, Quest const* quest, uint32 opt);
+        virtual void QuestReward(Player* /*player*/, Quest const* /*quest*/, LootItemType /*type*/, uint32 /*opt*/) { }
         virtual uint32 GetDialogStatus(Player* /*player*/) { return DIALOG_STATUS_SCRIPTED_NO_STATUS; }
         virtual void Destroyed(Player* /*player*/, uint32 /*eventId*/) { }
         virtual uint32 GetData(uint32 /*id*/) const { return 0; }

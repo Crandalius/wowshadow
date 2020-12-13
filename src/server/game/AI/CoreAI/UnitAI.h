@@ -42,6 +42,7 @@ class Unit;
 struct AISpellInfoType;
 enum DamageEffectType : uint8;
 enum SpellEffIndex : uint8;
+enum class LootItemType : uint8;
 
 //Selection method used by SelectTarget
 enum SelectAggroTarget
@@ -282,7 +283,8 @@ class TC_GAME_API UnitAI
         virtual void sGossipSelectCode(Player* /*player*/, uint32 /*menuId*/, uint32 /*gossipListId*/, char const* /*code*/) { }
         virtual void sQuestAccept(Player* /*player*/, Quest const* /*quest*/) { }
         virtual void sQuestSelect(Player* /*player*/, Quest const* /*quest*/) { }
-        virtual void sQuestReward(Player* /*player*/, Quest const* /*quest*/, uint32 /*opt*/) { }
+        virtual void QuestReward(Player* player, Quest const* quest, uint32 opt);
+        virtual void QuestReward(Player* /*player*/, Quest const* /*quest*/, LootItemType /*type*/, uint32 /*opt*/) { }
         virtual bool sOnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, SpellEffIndex /*effIndex*/) { return false; }
         virtual void sOnGameEvent(bool /*start*/, uint16 /*eventId*/) { }
 

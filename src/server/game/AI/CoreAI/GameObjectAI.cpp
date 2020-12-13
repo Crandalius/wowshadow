@@ -18,7 +18,13 @@
 
 #include "GameObjectAI.h"
 #include "CreatureAI.h"
+#include "LootMgr.h"
 #include "GameObject.h"
+
+void GameObjectAI::QuestReward(Player* player, Quest const* quest, uint32 opt)
+{
+    QuestReward(player, quest, LootItemType::Item, opt);
+}
 
 //GameObjectAI::GameObjectAI(GameObject* g) : go(g) { }
 int GameObjectAI::Permissible(const GameObject* go)

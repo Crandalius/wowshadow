@@ -21,6 +21,7 @@
 #include "CreatureAIImpl.h"
 #include "MotionMaster.h"
 #include "Player.h"
+#include "LootMgr.h"
 #include "Spell.h"
 #include "SpellAuraEffects.h"
 #include "SpellAuras.h"
@@ -248,6 +249,11 @@ void UnitAI::FillAISpellInfo()
 ThreatManager& UnitAI::GetThreatManager()
 {
     return me->getThreatManager();
+}
+
+void UnitAI::QuestReward(Player* player, Quest const* quest, uint32 opt)
+{
+    QuestReward(player, quest, LootItemType::Item, opt);
 }
 
 bool DefaultTargetSelector::operator()(Unit const* target) const
